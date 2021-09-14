@@ -1,27 +1,50 @@
-const Mascota = require('../models/Mascota');
-
+/* const Mascota = require('../models/Mascota'); */
+ const mongoose = require('mongoose');
+ const Mascota = mongoose.model('Mascota');
 //CRUD
 
-function crearMascota(req,res){
-  let Mascota= new Mascota(req.body);
-  res.status(200).send(Mascota);
+function crearMascota(req,res,next){
+  let mascota =new Mascota(req.body);
+  mascota.save().then(mascota=>{
+    res.status(200).send(mascota)
+  }).catch(next);
 }
 
-function obtenerMascotas(req,res){
-  let Mascota1 = new Mascota(1,'Zeus','cat','url','Gato negro',1,'Queretaro');
-  let Mascota2 = new Mascota(2,'Roco','cat','url','Gato gris',1,'Queretaro');
-  res.send([Mascota1, Mascota2]);
+function obtenerMascotas(req,res,next){
+  if(req.params.id){
+    Mascota.findById(req.params.id)
+    .then(mascota=>{res.status(200).send(mascota)})
+    .catch(next)
+  }else{
+    Mascota.find()
+    .then(mascotas=>{res.status(200).send(mascotas)})
+    .catch(next)
+  }
+ 
 }
 
-function modificarMascota(req,res){
-  let Mascota = new Mascota(req.params.id,'Zeus','cat','url','Gato negro',1,'Queretaro');
-  let modificaciones=req.body;
-  Mascota={...Mascota,...modificaciones}
-  res.send(Mascota);
+function modificarMascota(req,res,next){
+  Mascota.findById(req.params.id)
+  .then(mascota=>{
+    if(!mascota){
+     return  res.status(401);
+    }
+    let nuevaInfo=req.body;
+    if(typeof nuevaInfo.nombre!=='undefined')
+      mascota.nombre=nuevaInfo.nombre
+    
+      mascota.save()
+      then(updated=> {
+        res.status(200).json(updated.publicData())
+      })
+  })
+  .catch(next)
 }
 
 function eliminarMascota(req,res){
-  res.status(200).send(`El Mascota ${req.params.id} se elimino`);
+  Mascota.findOneAndDelete({_id:req.params.id})
+  then(r=> {res.status(200).send('La mascota se elimino')})
+  .catch(next)
 }
 
 
