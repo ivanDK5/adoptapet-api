@@ -3,9 +3,11 @@ const {
   crearMascota,
   obtenerMascotas,
   modificarMascota,
-  eliminarMascota
+  eliminarMascota,
+  count
 } = require('../controllers/mascotas');
 
+router.get('/count/:cat',count);
 router.get('/:id?', obtenerMascotas);
 router.post('/',crearMascota);
 router.put('/:id',modificarMascota);
