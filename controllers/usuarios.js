@@ -1,33 +1,64 @@
-const Usuario = require('../models/Usuario');
+const mongoose =require('mongoose');
+const Usuario =mongoose.model('Usuario');
+const passport= require('passport');
 
 //CRUD
 
-function crearUsuario(req,res){
-  let usuario= new Usuario(req.body);
-  res.status(200).send(usuario);
+function crearUsuario(req,res,next){
+ const body=req.body, password=body.password;
+ delete body.password;
+ const user =new Usuario(body);
+ user.createPassword(password);
+ user.save()
+ .then(user=>{
+   return res.status(200).json(user.toAuthJSON())
+ })
+ .catch(next)
 }
 
-function obtenerUsuarios(req,res){
-  let usuario1 = new Usuario(1,'juancho', 'Juan', 'Vega', 'juan@vega.com','juan@@vega.com','abc','normal');
-  let usuario2 = new Usuario(2,'montse', 'Monserrat', 'Vega', 'montse@vega.com','123','anunciante');
-  res.send([usuario1, usuario2]);
+function obtenerUsuarios(req,res,next){
+  Usuario.find()
+  .then(user=>{
+    res.json(user.publicData())
+  })
+  .catch(next);
 }
 
-function modificarUsuario(req,res){
-  let usuario = new Usuario(req.params.id,'juancho','Juan','Vega','juan@vega.com','juan@@vega.com','abc','normal');
-  let modificaciones=req.body;
-  usuario={...usuario,...modificaciones}
-  res.send(usuario);
+function modificarUsuario(req,res,next){
+  Usuario.findByIdAndUpdate(req.params.id,{$set:req.body},{new:true})
+  .then(user=>{
+    res.status(200).json(user.publicData())
+  }).catch(next)
+ 
 }
 
 function eliminarUsuario(req,res){
-  res.status(200).send(`El usuario ${req.params.id} se elimino`);
+  Usuario.findByIdAndDelete({_id: req.usuario.id})
+  .then(r=>res.status(200).send('Usuario eliminado'))
+  .catch(next)
 }
 
+function iniciarSesion(req,res,next){
+  if(!req.body.email || !req.body.password){
+    return res.status(422).json({error:{email:'falta informacion'}})
+  }
+
+  passport.authenticate('local',
+  {session:false },
+  function(err,user,info){
+    if(err){return next(err)}
+    if(user){
+      user.token=user.generaJWT();
+    }else{
+      return res.status(422).json(info);
+    }
+  })(req,res,next)
+}
 
 module.exports = {
   crearUsuario,
   obtenerUsuarios,
   modificarUsuario,
-  eliminarUsuario
+  eliminarUsuario,
+  iniciarSesion
 }

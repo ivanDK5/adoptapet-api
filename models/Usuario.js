@@ -27,7 +27,7 @@ const UsuarioSchema = new mongoose.Schema({
   },
 nombre: {type:String,required:true},
   apellido: {type:String, required:true},
-  email: {type:String, unique:[true,'falta email'],match:[/\s+@\s+.\s+/,'Email invalido'],index:true},
+  email: {type:String, unique:[true,'falta email'],match:[/\S+@\S+.\S+/, "Email invalido"],index:true},
   tipo:{type:String,enum:['normal','anunciante']},
   hash:String,
   salt:String
@@ -35,7 +35,7 @@ nombre: {type:String,required:true},
 
 UsuarioSchema.plugin(uniqueValidator,{message:'Ya existe'})
 
-UsuarioSchema.methods.publicData = () => {
+UsuarioSchema.methods.publicData = function(){
   return {
     id: this.id,
     username: this.username,
@@ -48,12 +48,12 @@ UsuarioSchema.methods.publicData = () => {
 
 UsuarioSchema.methods.createPassword= function(password){
   this.salt =crypto.randomBytes(16).toString('hex');
-  this.hash =crypto.pbkdf2(password,this.salt,10000,512,'sha512')
+  this.hash =crypto.pbkdf2Sync(password,this.salt,10000,512,'sha512')
   .toString('hex'); 
 }
 
 UsuarioSchema.methods.validatePassword = function (password){
-  const newHash =crypto.pbkdf2(password,this.salt,10000,512,'sha512')
+  const newHash =crypto.pbkdf2Sync(password,this.salt,10000,512,'sha512')
   toString('hex');
   return this.hash===newHash;
 }
