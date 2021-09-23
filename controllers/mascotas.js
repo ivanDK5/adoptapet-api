@@ -34,7 +34,7 @@ function modificarMascota(req,res,next){
       mascota.nombre=nuevaInfo.nombre
     
       mascota.save()
-      then(updated=> {
+      .then(updated=> {
         res.status(200).json(updated.publicData())
       })
   })
@@ -43,7 +43,7 @@ function modificarMascota(req,res,next){
 
 function eliminarMascota(req,res){
   Mascota.findOneAndDelete({_id:req.params.id})
-  then(r=> {res.status(200).send('La mascota se elimino')})
+  .then(r=> {res.status(200).send('La mascota se elimino')})
   .catch(next)
 }
 
